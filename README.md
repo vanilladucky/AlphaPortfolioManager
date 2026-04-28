@@ -1,142 +1,166 @@
-# Alpha PM — AI Portfolio Manager (Ollama Edition)
+# Alpha PM — AI Portfolio Manager
 
-Runs **100% locally and free** on your Mac.  
-No Anthropic API key. No subscription. No cloud.
+An AI-powered portfolio manager running a daily pipeline of market briefs, equity research, and autonomous investment decisions.
 
-Uses **Ollama** (local LLM) + **yfinance** (real stock data) + RSS news feeds.
+Built with **Claude Haiku** (Anthropic API) + **yfinance** (real market data) + **web search**.
 
 ---
 
-## How the Data Pipeline Works
+## How the Pipeline Works
 
 ```
-yfinance  ──→  Real prices, financials, 52w range, margins
-RSS feeds ──→  Live news headlines (Yahoo Finance, MarketWatch, CNBC, Reuters)
+yfinance  ──→  Live prices, fundamentals, 52w range, margins, analyst targets
+RSS feeds ──→  Headlines (Yahoo Finance, MarketWatch, CNBC)
+Web search──→  Latest earnings, analyst upgrades, breaking news (used in reports)
               │
               ▼
-         Context string built in Python
+     Step 1 — Daily Brief
+     Market context: sentiment score, macro themes, sector rotation stances
               │
               ▼
-         Local Ollama model analyses the real data
+     Step 2 — Equity Plays  (brief-informed)
+     5 tickers nominated and researched using today's macro view
               │
               ▼
-         Structured JSON response → frontend charts
+     Step 3 — Research Reports  (auto, all 5 plays)
+     Full equity research with web search for latest news
+              │
+              ▼
+     Step 4 — Human Portfolio De-risk
+     Fresh yfinance + web search analysis on every open position
+              │
+              ▼
+     Step 5 — AI Agent Pipeline
+     Autonomous BUY/PASS on new plays + HOLD/REDUCE/EXIT on existing positions
 ```
 
-No hallucinated prices. Stock data comes from yfinance directly.
+No hallucinated prices — all stock data comes from yfinance directly.
+
+---
+
+## Requirements
+
+- Python 3.11+
+- An **Anthropic API key** (`sk-ant-...`)
 
 ---
 
 ## Quick Start
 
-### Step 1 — Install Ollama
-
 ```bash
-# macOS — one command
-curl -fsSL https://ollama.ai/install.sh | sh
-
-# Or download from: https://ollama.ai/download
-```
-
-### Step 2 — Pull a model
-
-```bash
-# Recommended default (4.7 GB, works on most Macs with 8 GB RAM)
-ollama pull llama3.1:8b
-
-# Lightweight option (2 GB, 4 GB RAM minimum)
-ollama pull llama3.2:3b
-
-# Best quality (9 GB, needs 16 GB RAM)
-ollama pull qwen2.5:14b
-```
-
-### Step 3 — Run Alpha PM
-
-```bash
-cd alpha-pm
+cd ClaudePortfolioManager
 chmod +x run.sh
 ./run.sh
 ```
 
+The script will prompt for your API key if `ANTHROPIC_API_KEY` is not set.  
 Browser opens automatically at **http://localhost:8000**.
+
+To set the key permanently:
+```bash
+echo 'export ANTHROPIC_API_KEY=sk-ant-...' >> ~/.zshrc
+```
 
 ---
 
-## Model Selection Guide
+## Cost
 
-| Model | RAM needed | Download | Quality | Speed |
-|---|---|---|---|---|
-| `llama3.2:3b` | 4 GB | 2 GB | ★★☆ | Very fast |
-| `llama3.1:8b` | 8 GB | 4.7 GB | ★★★ | Fast |
-| `mistral:7b` | 8 GB | 4.1 GB | ★★★ | Fast |
-| `qwen2.5:14b` | 16 GB | 9 GB | ★★★★ | Medium |
-| `llama3.1:70b` | 48 GB | 40 GB | ★★★★★ | Slow |
+Uses **Claude Haiku** — the most cost-efficient Claude model.
 
-To change model:
-```bash
-export ALPHA_PM_MODEL=qwen2.5:14b
-./run.sh
-```
+| Item | Estimated cost |
+|---|---|
+| Full daily pipeline (brief + 5 plays + 5 reports + de-risk + agent) | ~$0.50–0.80 |
+| Brief only | ~$0.02 |
+| Per research report (with web search) | ~$0.05–0.10 |
 
-Or edit `OLLAMA_MODEL` in `main.py` line 40.
+Live cost tracking is displayed in the UI and logged to the terminal for every API call.
 
 ---
 
 ## Features
 
-### 📊 Daily Brief (auto at 9:00 AM)
-- Fetches real prices for: S&P 500, Nasdaq, Dow, VIX, 10Y/2Y yields,  
-  Gold, Oil, Copper, EUR/USD, USD/JPY, USD/SGD, BTC, ETH
-- Fetches 11 sector ETF returns (XLK, XLF, XLV, XLE, XLY, ...)
-- Pulls headlines from Yahoo Finance, MarketWatch, CNBC, Reuters
-- LLM analyses all real data → sentiment score, macro themes, sector rotation
+### 📊 Daily Market Brief  *(auto at 9:00 AM, weekdays only)*
+- Fetches live prices for indices (S&P 500, Nasdaq, Dow, Russell, VIX, 10Y/2Y yields), commodities (Gold, Oil, Copper, Silver, Nat Gas), FX (DXY, EUR/USD, USD/JPY, USD/SGD, GBP/USD, AUD/USD), crypto (BTC, ETH), and all 11 sector ETFs
+- Pulls headlines from Yahoo Finance, MarketWatch, CNBC
+- Claude analyses real data → executive summary, macro outlook, sentiment score (0–100), sector rotation stances (overweight/neutral/underweight with scores), key themes, risk factors, upcoming catalysts
 
-### 💡 Equity Plays (5 ideas)
-1. LLM nominates 5 tickers based on market context + news
-2. yfinance fetches **real fundamentals** for each ticker:  
-   P/E, EV/EBITDA, margins, revenue growth, analyst targets, 52w range
-3. LLM writes thesis, catalysts, stop-loss using the **actual numbers**
+### 💡 Equity Plays  *(5 brief-informed ideas)*
+1. Claude nominates 5 tickers aligned with today's macro view — favouring overweight sectors, avoiding underweight
+2. yfinance fetches real fundamentals for each: P/E, forward P/E, EV/EBITDA, P/B, revenue TTM, margins, growth rates, ROE, FCF, analyst targets, 52w range, YTD return, beta
+3. Claude writes a thesis citing the actual numbers and the day's macro context, with catalysts, risks, target price, and stop-loss
+
+### 📄 Research Reports  *(auto-generated for all 5 plays)*
+- Full equity research note per ticker, generated with web search for latest earnings, analyst upgrades/downgrades, and news
+- Includes scenario analysis (bull/base/bear), valuation methods, competitive position, and decision framework (buy if / pass if / watch)
+
+### ⚡ De-risk Analysis
+- On-demand (click per position) or auto-run daily for all human positions
+- Fetches fresh yfinance data + web search for latest news
+- Returns recommendation (HOLD/REDUCE/EXIT), updated target and stop-loss, key developments, and a specific action with price levels
+
+### 🤖 AI Agent Portfolio
+- Completely autonomous portfolio running in parallel to the human portfolio
+- Reviews each research report and decides BUY or PASS
+- Position sizing: standard 10%, high-conviction 15%, always keeps ≥20% cash
+- Maximum 8 concurrent positions
+- Daily de-risk on every agent position with automatic enforcement of:
+  - Hard stop-loss: EXIT if down ≥10%
+  - Profit-taking: REDUCE 40% if up ≥25%
+  - Second-pass review for HOLD outcomes (can also ADD or REDUCE)
+
+### 📡 Live Price Updates
+- Polls all held tickers (human + agent combined) every 5 minutes
+- Market-hours gated — only polls when the relevant exchange is open:
+  - SGX: 09:00–17:00 SGT
+  - HKEX: 09:30–16:00 SGT
+  - US: 21:30–04:00 SGT (spans midnight)
+- Updates pushed to the browser via WebSocket in real time
 
 ### 📂 Portfolio Manager
-- Buy/sell with avg cost basis tracking
-- De-risk analysis fetches fresh yfinance data + ticker news on demand
-- P&L by position bar chart, sector exposure donut chart
+- Buy/sell with average cost basis tracking
+- Unrealised P&L per position, live price feed
+- Sector exposure donut chart, P&L bar chart
 
 ### 📈 Performance Analytics
 - Equity curve vs $1M baseline
 - Drawdown from peak chart
 - Daily return distribution histogram
-- Win/loss breakdown, profit factor
+- Win/loss breakdown, profit factor, trade history
+
+### ⚔️ You vs AI Agent
+- Side-by-side comparison of human and agent portfolio performance
+- Agent decision log with full reasoning for every trade
 
 ---
 
-## Scheduling Logic
+## Scheduling
 
-| Time | What happens |
+| Condition | Behaviour |
 |---|---|
-| App started **before 9 AM** | Scheduler waits; runs at exactly 09:00 |
-| App started **after 9 AM** (no data yet) | Catch-up run triggers immediately |
-| App started **after 9 AM** (data exists) | Nothing; next run tomorrow at 09:00 |
-| **Every day at 09:00** | Brief + plays auto-generate in background |
+| Weekday, started before 9 AM | Waits; runs at exactly 09:00 SGT |
+| Weekday, started after 9 AM, no data yet | Catch-up run triggers immediately |
+| Weekday, started after 9 AM, data exists | Nothing; next run tomorrow |
+| **Every weekday at 09:00** | Full pipeline: brief → plays → reports → de-risk → agent |
+| Saturday / Sunday | Pipeline skipped entirely |
+
+If the browser tab was open during the pipeline and missed the completion event, the UI catches up automatically within 30 seconds via status polling.
 
 ---
 
 ## File Structure
 
 ```
-alpha-pm/
-├── main.py           # FastAPI backend + Ollama + yfinance
+ClaudePortfolioManager/
+├── main.py           # FastAPI backend, pipeline, AI agent, scheduler
+├── database.py       # SQLite layer (all reads/writes)
 ├── static/
-│   └── index.html    # Frontend (Bloomberg-style dark UI)
+│   └── index.html    # Frontend (Bloomberg-style dark UI, Chart.js)
 ├── data/
-│   ├── portfolio.json
-│   ├── snapshots.json
-│   ├── briefs/         # YYYY-MM-DD.json (with real sector scores)
-│   ├── plays/          # YYYY-MM-DD.json (with real yfinance prices)
-│   └── reports/        # TICKER_DATE.json
-├── requirements.txt    # Python deps (no anthropic SDK)
-├── run.sh             # One-command launcher
+│   └── alpha_pm.db   # SQLite database (briefs, plays, reports, portfolios, costs)
+├── requirements.txt
+├── run.sh            # One-command launcher
+├── Dockerfile        # For cloud deployment
+├── fly.toml          # Fly.io config (Singapore region, persistent volume)
 └── README.md
 ```
 
@@ -144,25 +168,25 @@ alpha-pm/
 
 ## Troubleshooting
 
-**"Cannot reach Ollama"**
+**Rate limited (429)**  
+The app auto-retries with exponential backoff (waits 65s → 90s → 120s). No action needed — you'll see a warning in the terminal and a notification in the UI.
+
+**Report shows "Could not parse report JSON"**  
+Claude occasionally adds a preamble before the JSON when using web search. The system prompt is set to prevent this. If it persists, the report is skipped and the pipeline continues with the remaining plays.
+
+**Brief generated but not showing in browser**  
+Refresh the page — the UI will re-fetch from the API on load. The brief tab should populate within a few seconds.
+
+**yfinance returns no data or stale prices**  
+Occasionally happens on weekends or around market holidays. The last known close is used. Wait and retry.
+
+**"ANTHROPIC_API_KEY not set"**  
+Set the key in your shell:
 ```bash
-# Start Ollama manually in a separate terminal
-ollama serve
+export ANTHROPIC_API_KEY=sk-ant-...
 ```
-
-**LLM returns garbled JSON**
-- Switch to a larger/better model: `export ALPHA_PM_MODEL=qwen2.5:14b`
-- Or increase context: edit `LLM_CTX_WINDOW = 16384` in `main.py`
-
-**yfinance rate-limited or returning no data**
-- This occasionally happens. Wait a few minutes and retry.
-- Weekends/holidays: indices data may be stale (last close).
-
-**Generation is slow**
-- Normal for larger models. `llama3.2:3b` is the fastest option.
-- Speed doesn't matter much — daily brief only runs once at 9 AM.
-- M1/M2/M3 Macs with enough RAM run these models very efficiently.
+Or pass it directly: `ANTHROPIC_API_KEY=sk-ant-... ./run.sh`
 
 ---
 
-*FastAPI · APScheduler · Chart.js · Ollama · yfinance · feedparser*
+*FastAPI · APScheduler · Claude Haiku · Anthropic Web Search · yfinance · feedparser · Chart.js · SQLite*
