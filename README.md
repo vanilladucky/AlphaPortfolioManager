@@ -1,8 +1,9 @@
-# Alpha PM — AI Portfolio Manager
-
-An AI-powered portfolio manager running a daily pipeline of market briefs, equity research, and autonomous investment decisions.
-
-Built with **Claude Haiku** (Anthropic API) + **yfinance** (real market data) + **web search**.
+<div align="center">
+  <img src="assets/Icon.png" alt="Alpha PM" width="120" />
+  <h1>Alpha PM — AI Portfolio Manager</h1>
+  <p>An AI-powered portfolio manager running a daily pipeline of market briefs, equity research, and autonomous investment decisions.</p>
+  <p>Built with <strong>Claude Haiku</strong> (Anthropic API) · <strong>yfinance</strong> (real market data) · <strong>Web Search</strong></p>
+</div>
 
 ---
 
@@ -11,7 +12,7 @@ Built with **Claude Haiku** (Anthropic API) + **yfinance** (real market data) + 
 ```
 yfinance  ──→  Live prices, fundamentals, 52w range, margins, analyst targets
 RSS feeds ──→  Headlines (Yahoo Finance, MarketWatch, CNBC)
-Web search──→  Latest earnings, analyst upgrades, breaking news (used in reports)
+Web search──→  Latest earnings, analyst upgrades, breaking news (reports & de-risk)
               │
               ▼
      Step 1 — Daily Brief
@@ -77,6 +78,34 @@ Live cost tracking is displayed in the UI and logged to the terminal for every A
 
 ---
 
+## Screenshots
+
+### Dashboard
+![Dashboard](assets/dashboard.png)
+*Portfolio equity curve, asset allocation, sector rotation scores, quick actions, and recent trades — all in one view.*
+
+### Daily Market Brief
+![Daily Market Brief](assets/daily_brief.png)
+*Sentiment score, macro outlook, sector rotation stances, key themes, risk factors, and upcoming catalysts — generated fresh every weekday at 9 AM.*
+
+### Equity Plays
+![Equity Plays](assets/new_ideas.png)
+*5 brief-informed stock ideas plotted on a risk/reward chart, each with a full thesis, catalysts, and stop-loss built from real yfinance data.*
+
+### Portfolio Manager
+![Portfolio Manager](assets/portfolio.png)
+*Holdings with live prices, unrealised P&L per position, sector exposure donut, and full transaction history.*
+
+### Performance Analytics
+![Performance Analytics](assets/performance.png)
+*Equity curve vs $1M baseline, drawdown from peak, daily return distribution, and win/loss breakdown.*
+
+### You vs AI Agent
+![You vs AI Agent](assets/competition.png)
+*Side-by-side comparison of your portfolio against the autonomous AI agent — same data, independent decisions.*
+
+---
+
 ## Features
 
 ### 📊 Daily Market Brief  *(auto at 9:00 AM, weekdays only)*
@@ -91,7 +120,7 @@ Live cost tracking is displayed in the UI and logged to the terminal for every A
 
 ### 📄 Research Reports  *(auto-generated for all 5 plays)*
 - Full equity research note per ticker, generated with web search for latest earnings, analyst upgrades/downgrades, and news
-- Includes scenario analysis (bull/base/bear), valuation methods, competitive position, and decision framework (buy if / pass if / watch)
+- Includes scenario analysis (bull/base/bear), valuation methods, competitive position, and a decision framework (buy if / pass if / watch)
 
 ### ⚡ De-risk Analysis
 - On-demand (click per position) or auto-run daily for all human positions
@@ -129,6 +158,7 @@ Live cost tracking is displayed in the UI and logged to the terminal for every A
 
 ### ⚔️ You vs AI Agent
 - Side-by-side comparison of human and agent portfolio performance
+- Combined equity curve overlay
 - Agent decision log with full reasoning for every trade
 
 ---
@@ -157,6 +187,7 @@ ClaudePortfolioManager/
 │   └── index.html    # Frontend (Bloomberg-style dark UI, Chart.js)
 ├── data/
 │   └── alpha_pm.db   # SQLite database (briefs, plays, reports, portfolios, costs)
+├── assets/           # Screenshots and icon
 ├── requirements.txt
 ├── run.sh            # One-command launcher
 ├── Dockerfile        # For cloud deployment
@@ -175,7 +206,7 @@ The app auto-retries with exponential backoff (waits 65s → 90s → 120s). No a
 Claude occasionally adds a preamble before the JSON when using web search. The system prompt is set to prevent this. If it persists, the report is skipped and the pipeline continues with the remaining plays.
 
 **Brief generated but not showing in browser**  
-Refresh the page — the UI will re-fetch from the API on load. The brief tab should populate within a few seconds.
+Refresh the page — the UI re-fetches from the API on load and the brief tab will populate within a few seconds.
 
 **yfinance returns no data or stale prices**  
 Occasionally happens on weekends or around market holidays. The last known close is used. Wait and retry.
