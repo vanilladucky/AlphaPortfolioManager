@@ -181,17 +181,19 @@ If the browser tab was open during the pipeline and missed the completion event,
 
 ```
 ClaudePortfolioManager/
-├── main.py           # FastAPI backend, pipeline, AI agent, scheduler
-├── database.py       # SQLite layer (all reads/writes)
-├── static/
-│   └── index.html    # Frontend (Bloomberg-style dark UI, Chart.js)
+├── code/
+│   ├── main.py           # FastAPI backend, pipeline, AI agent, scheduler
+│   ├── database.py       # SQLite layer (all reads/writes)
+│   ├── debate.py         # Analyst debate pipeline (local Ollama / DeepSeek R1)
+│   ├── requirements.txt
+│   └── static/
+│       └── index.html    # Frontend (Bloomberg-style dark UI, Chart.js)
 ├── data/
-│   └── alpha_pm.db   # SQLite database (briefs, plays, reports, portfolios, costs)
-├── assets/           # Screenshots and icon
-├── requirements.txt
-├── run.sh            # One-command launcher
-├── Dockerfile        # For cloud deployment
-├── fly.toml          # Fly.io config (Singapore region, persistent volume)
+│   └── alpha_pm.db       # SQLite database (briefs, plays, reports, portfolios, costs)
+├── assets/               # Screenshots and icon
+├── run.sh                # One-command launcher
+├── Dockerfile            # For cloud deployment
+├── fly.toml              # Fly.io config (Singapore region, persistent volume)
 └── README.md
 ```
 

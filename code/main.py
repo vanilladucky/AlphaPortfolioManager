@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import database as db
+import debate
 
 # ═══════════════════════════════════════════════════════════════
 # CONFIG
@@ -31,6 +32,7 @@ AI_MODEL          = "claude-haiku-4-5-20251001"
 AI_URL            = "https://api.anthropic.com/v1/messages"
 IN_RATE           = 1.0 / 1_000_000   # $1.00 / M input tokens
 OUT_RATE          = 5.0 / 1_000_000   # $5.00 / M output tokens
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -1385,6 +1387,8 @@ async def run_agent_pipeline(plays: list, reports: dict) -> None:
         "decisions":     db.load_agent_decisions(20),
     })
 
+
+
 async def daily_morning_run():
     if datetime.now().weekday() >= 5:
         log.info("⏭  daily_morning_run skipped — weekend")
@@ -1437,6 +1441,13 @@ async def daily_morning_run():
     # ── 5. AI Agent pipeline ───────────────────────────────────
     log.info("🤖  [5/5] AI Agent making autonomous decisions...")
     await run_agent_pipeline(plays, reports)
+
+    # ── 6. Analyst debates (background — Ollama, free) ─────────
+    if debate.DEBATE_ENABLED:
+        log.info("🗣  [6/6] Launching analyst debates in background (%s)...", debate.DEBATE_MODEL)
+        asyncio.create_task(debate.run_all_debates(plays, reports, brief, broadcast))
+    else:
+        log.info("🗣  [6/6] Debates disabled — skipping")
 
     # ── Done ───────────────────────────────────────────────────
     daily   = db.load_daily_cost()
@@ -1494,6 +1505,20 @@ async def startup():
         log.info("⏳  Before 9 AM — waiting for scheduled run.")
     else:
         log.info("✅  Today's data already exists.")
+        if debate.DEBATE_ENABLED and is_weekday:
+            plays = db.load_plays()
+            brief = db.load_brief() or db.load_latest_brief()
+            if plays and brief:
+                missing = [p["ticker"] for p in plays if db.load_debate(p["ticker"]) is None]
+                if missing:
+                    reports = {t: db.load_latest_report(t) for t in missing}
+                    reports = {t: r for t, r in reports.items() if r}
+                    if reports:
+                        log.info("🗣  Missing debates for %s — launching in background...", missing)
+                        asyncio.create_task(debate.run_all_debates(
+                            [p for p in plays if p["ticker"] in reports],
+                            reports, brief, broadcast
+                        ))
 
     _live_price_task = asyncio.create_task(live_price_poller())
     log.info("✅  Live price updater enabled (every 5 minutes)")
@@ -1526,6 +1551,9 @@ async def ws_endpoint(ws: WebSocket):
         "daily_calls":   daily["calls"],
         "alltime_total": round(alltime["cost_usd"], 6),
     })
+    if debate.DEBATE_ENABLED and debate._running:
+        await ws.send_json({"type": "debates_in_progress",
+                            "tickers": list(debate._running)})
     await ws.send_json({"type":"connected"})
     try:
         while True:
@@ -1591,6 +1619,25 @@ async def get_report(ticker: str):
     r = db.load_latest_report(ticker.upper())
     if not r: raise HTTPException(404,f"No report for {ticker}")
     return r
+
+@app.get("/api/debate/{ticker}")
+async def get_debate(ticker: str):
+    d = db.load_latest_debate(ticker.upper())
+    if not d: raise HTTPException(404, f"No debate for {ticker}")
+    return d
+
+@app.post("/api/debates/run")
+async def trigger_debates():
+    plays = db.load_plays()
+    brief = db.load_brief() or db.load_latest_brief()
+    if not plays or not brief:
+        raise HTTPException(400, "No plays or brief available to debate")
+    reports = {p["ticker"]: db.load_latest_report(p["ticker"]) for p in plays}
+    reports = {t: r for t, r in reports.items() if r}
+    if not reports:
+        raise HTTPException(400, "No reports available to debate")
+    asyncio.create_task(debate.run_all_debates(plays, reports, brief, broadcast))
+    return {"status": "started", "tickers": list(reports.keys())}
 
 @app.get("/api/quote/{ticker}")
 async def get_quote(ticker: str):

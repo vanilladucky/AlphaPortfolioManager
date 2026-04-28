@@ -56,11 +56,11 @@ echo "✅  Virtual environment active"
 
 # ─── Install dependencies ──────────────────────────────────
 echo "📦  Installing dependencies..."
-python3 -m pip install -q -r requirements.txt
+python3 -m pip install -q -r code/requirements.txt
 echo "✅  Dependencies ready"
 
 # ─── Create directories ────────────────────────────────────
-mkdir -p data/briefs data/plays data/reports static
+mkdir -p data
 
 # ─── Open browser ──────────────────────────────────────────
 (sleep 3 && open http://localhost:8000 2>/dev/null || true) &
@@ -72,4 +72,4 @@ echo "    Model:       claude-haiku-4-5-20251001"
 echo "    Daily run:   09:00 AM (auto-generates brief + plays)"
 echo "    Press Ctrl+C to stop"
 echo ""
-python3 main.py
+cd code && python3 main.py

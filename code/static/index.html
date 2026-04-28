@@ -137,6 +137,7 @@ body {
 .notif-card.info{border-color:var(--blue);color:var(--blue)}
 @keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
 /* ═══ CARDS ══════════════════════════════════════════════════ */
 .card {
@@ -310,6 +311,9 @@ input:focus{border-color:var(--gold)}
     </div>
     <div class="sb-nav-item" data-tab="versus">
       <span class="sb-nav-icon">⚔</span>You vs AI
+    </div>
+    <div class="sb-nav-item" data-tab="debates">
+      <span class="sb-nav-icon">🗣</span>Debates
     </div>
   </nav>
 
@@ -733,6 +737,18 @@ input:focus{border-color:var(--gold)}
       </div>
     </div>
 
+    <!-- ─── DEBATES ─── -->
+    <div id="tab-debates" class="tab-pane hidden">
+      <div class="flex justify-between items-center mb-16">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:var(--gold)">Analyst Debates 🗣</div>
+          <div class="text-sm text-muted">Bull vs Bear vs Judge — DeepSeek R1 local inference</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-debates" onclick="triggerDebates()">▶ Run Debates</button>
+      </div>
+      <div id="debates-grid"></div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -760,6 +776,8 @@ const S = {
   status: null,
   derisks: {},
   reports: {},
+  debates: {},
+  debateStream: {},
   loading: new Set(),
   tab: 'dashboard',
 };
@@ -836,7 +854,34 @@ function handleWS(msg) {
       S.loading.add(msg.job);
       notify(`⟳ ${msg.msg}`, 'info', 3000);
       updateLoadingState();
+      if (msg.job.startsWith('debate_') && S.tab === 'debates') renderDebates();
       break;
+    case 'debate_role_start':
+      if (!S.debateStream[msg.ticker]) S.debateStream[msg.ticker] = {};
+      S.debateStream[msg.ticker].activeRole = msg.role;
+      if (S.tab === 'debates') renderDebates();
+      break;
+    case 'debate_token': {
+      if (!S.debateStream[msg.ticker]) S.debateStream[msg.ticker] = {};
+      const st = S.debateStream[msg.ticker];
+      if (!st[msg.role]) st[msg.role] = {thinking: '', answer: ''};
+      const field = msg.thinking ? 'thinking' : 'answer';
+      st[msg.role][field] += msg.token;
+      if (S.tab === 'debates') {
+        const elId = msg.thinking ? `dthink-${msg.ticker}-${msg.role}` : `dans-${msg.ticker}-${msg.role}`;
+        const domEl = document.getElementById(elId);
+        if (domEl) {
+          domEl.textContent += msg.token;
+          if (msg.thinking) {
+            const det = document.getElementById(`dthink-details-${msg.ticker}-${msg.role}`);
+            if (det) det.removeAttribute('hidden');
+          }
+        } else {
+          renderDebates();
+        }
+      }
+      break;
+    }
     case 'brief_complete':
       S.loading.delete('brief');
       S.brief = msg.data;
@@ -874,6 +919,22 @@ function handleWS(msg) {
       // Refresh ideas tab to show report available indicator
       if (S.tab === 'ideas') renderIdeas();
       updateLoadingState();
+      break;
+    case 'debate_complete':
+      S.loading.delete(`debate_${msg.ticker}`);
+      S.debates[msg.ticker] = msg.data;
+      delete S.debateStream[msg.ticker];
+      notify(`🗣 Debate ready: ${msg.ticker} → ${msg.data.verdict_action}`, 'info', 5000);
+      updateLoadingState();
+      if (S.tab === 'debates') renderDebates();
+      break;
+    case 'debates_complete':
+      notify(`🗣 ${msg.msg}`, 'success');
+      break;
+    case 'debates_in_progress':
+      (msg.tickers||[]).forEach(t => S.loading.add(`debate_${t}`));
+      updateLoadingState();
+      if (S.tab === 'debates') renderDebates();
       break;
     case 'daily_run_start':
       notify('⏰ Daily pipeline starting: Brief → Plays → Reports', 'info');
@@ -963,10 +1024,11 @@ async function init() {
   api('GET','/api/brief').then(b=>{ S.brief=b; renderBrief(); updateBriefStatus(); }).catch(()=>{});
   api('GET','/api/plays').then(p=>{ S.plays=p; renderIdeas(); updatePlaysStatus(); }).catch(()=>{});
   api('GET','/api/reports').then(meta=>{
-    // Pre-fetch any reports that were auto-generated today
+    // Pre-fetch any reports and debates that were auto-generated today
     const today = new Date().toISOString().slice(0,10);
     meta.filter(r=>r.date===today).forEach(r=>{
       api('GET',`/api/report/${r.ticker}`).then(rep=>{ S.reports[r.ticker]=rep; }).catch(()=>{});
+      api('GET',`/api/debate/${r.ticker}`).then(d=>{ S.debates[d.ticker]=d; }).catch(()=>{});
     });
   }).catch(()=>{});
 
@@ -1039,7 +1101,7 @@ function switchTab(tab) {
   const titles = {
     dashboard:'Dashboard', brief:'Daily Market Brief', ideas:"Today's Ideas",
     portfolio:'Portfolio Manager', performance:'Performance Analytics',
-    versus:'You vs AI Agent',
+    versus:'You vs AI Agent', debates:'Analyst Debates',
   };
   $('topbar-title').textContent = titles[tab]||tab;
   refreshTabCharts(tab);
@@ -1054,6 +1116,7 @@ function refreshTabCharts(tab) {
   if (tab==='portfolio') { renderPortfolioCharts(); renderPositions(); renderTxTable(); }
   if (tab==='performance') { renderPerformance(); }
   if (tab==='versus') { renderVersus(); }
+  if (tab==='debates') { renderDebates(); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2031,6 +2094,58 @@ function showReportModal(ticker, r) {
       </div>`).join('')}
     </div>`:''}
 
+    ${(()=>{
+      const d = S.debates[ticker];
+      const loading = S.loading.has(`debate_${ticker}`);
+      if (loading) return `
+        <div class="card mb-16" style="border-top:2px solid var(--blue)">
+          <div class="section-head" style="color:var(--blue)">🗣 Analyst Debate</div>
+          <div class="text-muted" style="font-size:11px;text-align:center;padding:16px 0">
+            ⟳ Debate in progress (DeepSeek R1)… this takes a few minutes per stock.
+          </div>
+        </div>`;
+      if (!d) return `
+        <div class="card mb-16" style="border-top:2px solid var(--borderl)">
+          <div class="section-head">🗣 Analyst Debate</div>
+          <div class="text-muted" style="font-size:11px;text-align:center;padding:12px 0">
+            No debate available for today — debates run automatically after the daily pipeline.
+          </div>
+        </div>`;
+      const vCol = d.verdict_action==='BUY'?'var(--green)':d.verdict_action==='PASS'?'var(--red)':'var(--amber)';
+      const vTag = d.verdict_action==='BUY'?'tag-green':d.verdict_action==='PASS'?'tag-red':'tag-gold';
+      return `
+        <div class="card mb-16" style="border-top:2px solid var(--blue)">
+          <div class="flex justify-between items-center mb-12">
+            <div class="section-head" style="color:var(--blue);margin:0">🗣 Analyst Debate</div>
+            <span style="font-size:9px;color:var(--muted)">${d.model} · ${d.created_at||''}</span>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:9px;color:var(--green);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">🐂 BULL — Round 1</div>
+            <p style="font-size:11px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:10px;border-left:3px solid var(--green)">${d.bull_case}</p>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">🐻 BEAR — Round 1 Rebuttal</div>
+            <p style="font-size:11px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:10px;border-left:3px solid var(--red)">${d.bear_case}</p>
+          </div>
+          ${d.bull_case_2 ? `
+          <div style="margin-bottom:12px">
+            <div style="font-size:9px;color:var(--green);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">🐂 BULL — Round 2 Counter</div>
+            <p style="font-size:11px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:10px;border-left:3px solid var(--green)">${d.bull_case_2}</p>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">🐻 BEAR — Round 2 Final</div>
+            <p style="font-size:11px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:10px;border-left:3px solid var(--red)">${d.bear_case_2}</p>
+          </div>` : ''}
+          <div>
+            <div class="flex items-center gap-10 mb-6">
+              <div style="font-size:9px;color:var(--gold);font-weight:700;letter-spacing:1.5px">⚖️ JUDGE'S VERDICT</div>
+              <span class="tag ${vTag}" style="font-size:10px;padding:2px 10px">${d.verdict_action}</span>
+            </div>
+            <p style="font-size:11px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:10px;border-left:3px solid ${vCol}">${d.verdict}</p>
+          </div>
+        </div>`;
+    })()}
+
     <div class="flex gap-10 mt-16">
       <button class="btn btn-green flex-1" style="padding:12px" onclick="closeModal();showBuyModal('${r.ticker}','${(r.company||'').replace(/'/g,"\\'")}',${r.current_price||0})">Buy ${r.ticker}</button>
       <button class="btn btn-ghost flex-1" style="padding:12px" onclick="closeModal()">Close</button>
@@ -2209,6 +2324,142 @@ async function confirmAgentReset() {
   await api('POST','/api/agent/reset');
   notify('🤖 Agent portfolio reset to $1,000,000','success');
   renderVersus();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEBATES TAB
+// ═══════════════════════════════════════════════════════════════
+function renderDebates() {
+  const plays = S.plays || [];
+  const el = $('debates-grid');
+  if (!el) return;
+
+  if (!plays.length) {
+    el.innerHTML = `<div class="card" style="text-align:center;padding:40px 20px;color:var(--muted)">
+      No plays available yet — run the daily pipeline first.
+    </div>`;
+    return;
+  }
+
+  const ROLES = [
+    {key:'bull',  label:'🐂 BULL — Round 1',        col:'var(--green)'},
+    {key:'bear',  label:'🐻 BEAR — Round 1 Rebuttal', col:'var(--red)'},
+    {key:'bull2', label:'🐂 BULL — Round 2 Counter',  col:'var(--green)'},
+    {key:'bear2', label:'🐻 BEAR — Round 2 Final',    col:'var(--red)'},
+    {key:'judge', label:'⚖️ JUDGE\'S VERDICT',        col:'var(--gold)'},
+  ];
+
+  el.innerHTML = plays.map(play => {
+    const ticker  = play.ticker;
+    const d       = S.debates[ticker];
+    const loading = S.loading.has(`debate_${ticker}`);
+    const stream  = S.debateStream[ticker] || {};
+
+    // ── Completed debate ───────────────────────────────────
+    if (d) {
+      const vCol = d.verdict_action==='BUY'?'var(--green)':d.verdict_action==='PASS'?'var(--red)':'var(--amber)';
+      const vTag = d.verdict_action==='BUY'?'tag-green':d.verdict_action==='PASS'?'tag-red':'tag-gold';
+      return `
+        <div class="card mb-16" style="border-top:2px solid var(--blue)">
+          <div class="flex justify-between items-center mb-12">
+            <div>
+              <span style="font-size:15px;font-weight:700">${ticker}</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px">${play.company||''}</span>
+            </div>
+            <div class="flex items-center gap-10">
+              <span style="font-size:9px;color:var(--muted)">${d.model||'DeepSeek R1'} · ${d.created_at||''}</span>
+              <span class="tag ${vTag}" style="font-size:10px;padding:3px 12px">${d.verdict_action}</span>
+            </div>
+          </div>
+          <div style="margin-bottom:14px">
+            <div style="font-size:9px;color:var(--green);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">🐂 BULL — Round 1</div>
+            <p style="font-size:12px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:12px;border-left:3px solid var(--green);white-space:pre-wrap">${d.bull_case}</p>
+          </div>
+          <div style="margin-bottom:14px">
+            <div style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">🐻 BEAR — Round 1 Rebuttal</div>
+            <p style="font-size:12px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:12px;border-left:3px solid var(--red);white-space:pre-wrap">${d.bear_case}</p>
+          </div>
+          ${d.bull_case_2 ? `
+          <div style="margin-bottom:14px">
+            <div style="font-size:9px;color:var(--green);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">🐂 BULL — Round 2 Counter</div>
+            <p style="font-size:12px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:12px;border-left:3px solid var(--green);white-space:pre-wrap">${d.bull_case_2}</p>
+          </div>
+          <div style="margin-bottom:14px">
+            <div style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:1.5px;margin-bottom:6px">🐻 BEAR — Round 2 Final</div>
+            <p style="font-size:12px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:12px;border-left:3px solid var(--red);white-space:pre-wrap">${d.bear_case_2}</p>
+          </div>` : ''}
+          <div>
+            <div class="flex items-center gap-10 mb-6">
+              <div style="font-size:9px;color:var(--gold);font-weight:700;letter-spacing:1.5px">⚖️ JUDGE'S VERDICT</div>
+              <span class="tag ${vTag}" style="font-size:10px;padding:2px 10px">${d.verdict_action}</span>
+            </div>
+            <p style="font-size:12px;color:#b8cfe8;line-height:1.7;margin:0;padding-left:12px;border-left:3px solid ${vCol};white-space:pre-wrap">${d.verdict}</p>
+          </div>
+        </div>`;
+    }
+
+    // ── Live streaming ─────────────────────────────────────
+    if (loading) {
+      const activeRole = stream.activeRole || null;
+      return `
+        <div class="card mb-16" style="border-top:2px solid var(--blue)">
+          <div class="flex justify-between items-center mb-16">
+            <div>
+              <span style="font-size:15px;font-weight:700">${ticker}</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px">${play.company||''}</span>
+            </div>
+            <span style="font-size:10px;color:var(--blue)">⟳ Live · DeepSeek R1</span>
+          </div>
+          ${ROLES.map(r => {
+            const rs   = stream[r.key] || {thinking:'', answer:''};
+            const isActive = activeRole === r.key;
+            const hasThing = rs.thinking.length > 0;
+            const cursor   = isActive ? '<span style="display:inline-block;width:2px;height:13px;background:currentColor;vertical-align:middle;margin-left:1px;animation:blink 1s step-end infinite"></span>' : '';
+            return `
+            <div style="margin-bottom:18px">
+              <div style="font-size:9px;color:${r.col};font-weight:700;letter-spacing:1.5px;margin-bottom:8px">
+                ${r.label}${isActive ? ' <span style="color:var(--muted);font-weight:400;letter-spacing:0">(speaking…)</span>' : ''}
+              </div>
+              <details id="dthink-details-${ticker}-${r.key}"${hasThing ? '' : ' hidden'} style="margin-bottom:8px">
+                <summary style="font-size:9px;color:var(--muted);cursor:pointer;user-select:none">💭 Thinking…</summary>
+                <div id="dthink-${ticker}-${r.key}" style="font-size:10px;color:var(--muted);font-style:italic;line-height:1.6;padding:8px;background:rgba(255,255,255,0.03);border-radius:4px;margin-top:6px;white-space:pre-wrap;max-height:200px;overflow-y:auto">${rs.thinking}</div>
+              </details>
+              <div id="dans-${ticker}-${r.key}" style="font-size:12px;color:#b8cfe8;line-height:1.7;padding-left:12px;border-left:3px solid ${r.col};min-height:18px;white-space:pre-wrap">${rs.answer}${isActive ? cursor : (rs.answer ? '' : '<span style="color:var(--muted);font-style:italic">Waiting…</span>')}</div>
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    // ── No debate yet ──────────────────────────────────────
+    return `
+      <div class="card mb-16" style="border-top:2px solid var(--borderl)">
+        <div class="flex justify-between items-center mb-8">
+          <div>
+            <span style="font-size:15px;font-weight:700">${ticker}</span>
+            <span style="font-size:11px;color:var(--muted);margin-left:8px">${play.company||''}</span>
+          </div>
+        </div>
+        <div style="text-align:center;padding:24px 0;color:var(--muted);font-size:12px">
+          No debate yet — debates run automatically after the daily pipeline.
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function triggerDebates() {
+  if ([...(S.plays||[])].some(p => S.loading.has(`debate_${p.ticker}`))) return;
+  const btn = $('btn-debates');
+  if (btn) { btn.disabled = true; btn.textContent = '⟳ Starting...'; }
+  try {
+    await api('POST', '/api/debates/run');
+    notify('🗣 Debates started — results will appear as each stock completes', 'info', 5000);
+    (S.plays||[]).forEach(p => S.loading.add(`debate_${p.ticker}`));
+    renderDebates();
+  } catch(e) {
+    notify(`⚠ ${e.message}`, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Run Debates'; }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════

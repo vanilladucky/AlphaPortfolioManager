@@ -31,7 +31,7 @@ from typing import Any, Optional
 
 log = logging.getLogger("alpha-pm.db")
 
-DB_PATH = Path(__file__).parent / "data" / "alpha_pm.db"
+DB_PATH = Path(__file__).parent.parent / "data" / "alpha_pm.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 STARTING_CASH = 1_000_000.0
@@ -136,7 +136,26 @@ def init_db():
             cost_usd      REAL    NOT NULL DEFAULT 0.0,
             model         TEXT    NOT NULL DEFAULT ''
         );
+
+        CREATE TABLE IF NOT EXISTS debates (
+            date           TEXT NOT NULL,
+            ticker         TEXT NOT NULL,
+            model          TEXT NOT NULL,
+            bull_case      TEXT NOT NULL,
+            bear_case      TEXT NOT NULL,
+            verdict        TEXT NOT NULL,
+            verdict_action TEXT NOT NULL,
+            created_at     TEXT NOT NULL,
+            PRIMARY KEY (date, ticker)
+        );
         """)
+
+        # Migrate debates table to two-round format
+        for col in ("bull_case_2", "bear_case_2"):
+            try:
+                conn.execute(f"ALTER TABLE debates ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
+            except Exception:
+                pass  # column already exists
 
         # Seed portfolio row if fresh database
         row = conn.execute("SELECT id FROM portfolio WHERE id=1").fetchone()
@@ -471,6 +490,51 @@ def load_all_report_meta() -> list:
 
 
 # ═══════════════════════════════════════════════════════════════
+# DEBATES
+# ═══════════════════════════════════════════════════════════════
+
+def save_debate(ticker: str, date_str: str,
+                bull_case: str, bear_case: str,
+                bull_case_2: str, bear_case_2: str,
+                verdict: str, verdict_action: str, model: str):
+    with get_db() as conn:
+        conn.execute(
+            """INSERT INTO debates
+                   (date, ticker, model, bull_case, bear_case, bull_case_2, bear_case_2,
+                    verdict, verdict_action, created_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(date, ticker) DO UPDATE SET
+                   model=excluded.model,
+                   bull_case=excluded.bull_case, bear_case=excluded.bear_case,
+                   bull_case_2=excluded.bull_case_2, bear_case_2=excluded.bear_case_2,
+                   verdict=excluded.verdict, verdict_action=excluded.verdict_action,
+                   created_at=excluded.created_at""",
+            (date_str, ticker.upper(), model,
+             bull_case, bear_case, bull_case_2, bear_case_2,
+             verdict, verdict_action, datetime.now().strftime("%H:%M")),
+        )
+
+
+def load_debate(ticker: str, date_str: Optional[str] = None) -> Optional[dict]:
+    date_str = date_str or date.today().isoformat()
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM debates WHERE ticker=? AND date=?",
+            (ticker.upper(), date_str),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def load_latest_debate(ticker: str) -> Optional[dict]:
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM debates WHERE ticker=? ORDER BY date DESC LIMIT 1",
+            (ticker.upper(),),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+# ═══════════════════════════════════════════════════════════════
 # MIGRATION: import existing JSON files into SQLite (one-time)
 # ═══════════════════════════════════════════════════════════════
 
@@ -480,7 +544,7 @@ def migrate_json_files():
     import them into SQLite automatically so no history is lost.
     """
     import os
-    BASE = Path(__file__).parent / "data"
+    BASE = Path(__file__).parent.parent / "data"
 
     migrated = 0
 
