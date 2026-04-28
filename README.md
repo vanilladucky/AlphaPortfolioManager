@@ -2,7 +2,7 @@
   <img src="assets/Icon.png" alt="Alpha PM" width="120" />
   <h1>Alpha PM — AI Portfolio Manager</h1>
   <p>An AI-powered portfolio manager running a daily pipeline of market briefs, equity research, and autonomous investment decisions.</p>
-  <p>Built with <strong>Claude Haiku</strong> (Anthropic API) · <strong>yfinance</strong> (real market data) · <strong>Web Search</strong></p>
+  <p>Built with <strong>Claude Haiku</strong> (Anthropic API) · <strong>yfinance</strong> (real market data) · <strong>Web Search</strong> · <strong>DeepSeek R1</strong> (local Ollama debates)</p>
 </div>
 
 ---
@@ -33,6 +33,11 @@ Web search──→  Latest earnings, analyst upgrades, breaking news (reports &
               ▼
      Step 5 — AI Agent Pipeline
      Autonomous BUY/PASS on new plays + HOLD/REDUCE/EXIT on existing positions
+              │
+              ▼
+     Step 6 — Analyst Debate  (local, free, optional)
+     DeepSeek R1 14B runs a 2-round bull vs bear debate per stock
+     Bull R1 → Bear R1 rebuttal → Bull R2 counter → Bear R2 final → Judge verdict
 ```
 
 No hallucinated prices — all stock data comes from yfinance directly.
@@ -43,6 +48,7 @@ No hallucinated prices — all stock data comes from yfinance directly.
 
 - Python 3.11+
 - An **Anthropic API key** (`sk-ant-...`)
+- **Ollama** with `deepseek-r1:14b` pulled — required only for the debate feature (`DEBATE_ENABLED = True` in `debate.py`)
 
 ---
 
@@ -73,6 +79,7 @@ Uses **Claude Haiku** — the most cost-efficient Claude model.
 | Full daily pipeline (brief + 5 plays + 5 reports + de-risk + agent) | ~$0.50–0.80 |
 | Brief only | ~$0.02 |
 | Per research report (with web search) | ~$0.05–0.10 |
+| Analyst debates (DeepSeek R1 via Ollama) | **$0.00** — runs locally |
 
 Live cost tracking is displayed in the UI and logged to the terminal for every API call.
 
@@ -103,6 +110,10 @@ Live cost tracking is displayed in the UI and logged to the terminal for every A
 ### You vs AI Agent
 ![You vs AI Agent](assets/competition.png)
 *Side-by-side comparison of your portfolio against the autonomous AI agent — same data, independent decisions.*
+
+### Analyst Debates
+![Analyst Debates](assets/debate.png)
+*Two-round bull vs bear debate per stock streamed live from DeepSeek R1 14B running locally. Tokens print in real time with a collapsible thinking section. Judge reads all four turns before issuing a BUY / HOLD / PASS verdict.*
 
 ---
 
@@ -161,6 +172,18 @@ Live cost tracking is displayed in the UI and logged to the terminal for every A
 - Combined equity curve overlay
 - Agent decision log with full reasoning for every trade
 
+### 🗣 Analyst Debates  *(local, free — requires Ollama)*
+- Runs automatically after the daily pipeline, or on-demand via the Debates tab
+- Two-round structured debate per stock using **DeepSeek R1 14B** running locally via Ollama
+  1. **Bull R1** — opening investment case with specific numbers
+  2. **Bear R1** — direct rebuttal to the bull's argument
+  3. **Bull R2** — counter to the bear's rebuttal
+  4. **Bear R2** — final closing bear argument
+  5. **Judge** — reads all four turns and issues a BUY / HOLD / PASS verdict
+- Streams live token-by-token in the browser (with a collapsible thinking section for DeepSeek R1's `<think>` reasoning)
+- Toggle with `DEBATE_ENABLED = True/False` in `debate.py`
+- Zero API cost — runs entirely on your local machine
+
 ---
 
 ## Scheduling
@@ -184,7 +207,7 @@ ClaudePortfolioManager/
 ├── code/
 │   ├── main.py           # FastAPI backend, pipeline, AI agent, scheduler
 │   ├── database.py       # SQLite layer (all reads/writes)
-│   ├── debate.py         # Analyst debate pipeline (local Ollama / DeepSeek R1)
+│   ├── debate.py         # Analyst debate pipeline (DeepSeek R1 via local Ollama)
 │   ├── requirements.txt
 │   └── static/
 │       └── index.html    # Frontend (Bloomberg-style dark UI, Chart.js)
@@ -222,4 +245,4 @@ Or pass it directly: `ANTHROPIC_API_KEY=sk-ant-... ./run.sh`
 
 ---
 
-*FastAPI · APScheduler · Claude Haiku · Anthropic Web Search · yfinance · feedparser · Chart.js · SQLite*
+*FastAPI · APScheduler · Claude Haiku · Anthropic Web Search · yfinance · feedparser · Chart.js · SQLite · Ollama · DeepSeek R1*
