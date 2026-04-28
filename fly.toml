@@ -1,0 +1,19 @@
+app = "alpha-pm"
+primary_region = "sin"
+
+[build]
+
+[[mounts]]
+  source = "alpha_pm_data"
+  destination = "/app/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false
+  min_machines_running = 1
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

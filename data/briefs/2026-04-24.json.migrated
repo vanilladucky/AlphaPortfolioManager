@@ -1,0 +1,194 @@
+{
+  "date": "2026-04-24",
+  "generated_at": "15:17",
+  "sentiment": "risk-off",
+  "sentiment_score": 45,
+  "executive_summary": "U.S. equities declined modestly with S&P 500 down 0.41% and Nasdaq 100 down 0.56%, while the VIX rose 2.06% to 19.31 signaling increased volatility concerns. The 10-year Treasury yield surged 68bps to 4.323%, inverting the rate curve further as the 2-year held steady at 3.595%, reflecting inflation persistence and Fed tightening expectations. Energy sector momentum remains strongest at 67.8, while Technology weakness (-1.42% daily) and broad-based commodity selloff (gold -2.36%, silver -6.76% over 5d) suggest risk-averse positioning ahead of major tech earnings next week.",
+  "macro": {
+    "us": "U.S. equities under pressure: S&P 500 at 7108.40 (-0.41% 1d), Dow Jones at 49310.32 (-0.36% 1d), Nasdaq 100 at 651.42 (-0.56% 1d). Russell 2000 at 2775.10 (-0.37% 1d) shows small-cap underperformance, indicating risk-off sentiment across market cap spectrum.",
+    "global_growth": "European stocks opened lower as ceasefire optimism fades; TSMC jumped to record highs as Taiwan eases investment caps, supporting semiconductor growth narrative. China's DeepSeek V4 model release intensifies AI competition, pressuring U.S. tech valuations.",
+    "inflation": "10-year Treasury yield jumped 68bps to 4.323% (5d: +181bps), signaling persistent inflation concerns and higher real rates. 2-year yield stable at 3.595%, creating steep 73bp inversion that constrains bank profitability and suggests recession hedging.",
+    "rates": "10Y yield at 4.323% (+0.68% 1d) reflects inflation persistence and potential Fed hawkishness. 2Y at 3.595% unchanged, creating 73bp inverted curve. Yield curve inversion historically predicts economic slowdown; current steepening in long-end suggests terminal rate expectations rising."
+  },
+  "markets": {
+    "us_equities": "S&P 500 at 7108.40 (-0.41% 1d, -0.25% 5d); Nasdaq 100 at 651.42 (-0.56% 1d, +0.40% 5d) showing tech weakness despite 5d resilience. Broad-based decline across indices with Dow at 49310.32 (-0.36% 1d). VIX surge to 19.31 (+2.06% 1d) indicates elevated uncertainty.",
+    "bonds": "10Y Treasury at 4.323% (+68bps 1d), steepest 5-day climb of +181bps. 2Y at 3.595% stable, creating inverted 73bp spread. Credit spreads implied to widen given rate volatility and equity weakness. Flight-to-quality evident in government bond demand.",
+    "commodities": "Oil WTI at $96.28 (+0.45% 1d, +7.44% 5d) remains resilient; natural gas surged +3.90% to $2.716 on energy supply concerns. Gold at $4693.10 (-0.26% 1d, -2.36% 5d) underperforming despite rate spikes. Copper at $6.00 (-1.24% 1d) and silver at $74.55 (-1.21% 1d, -6.76% 5d) weakness signals growth concerns.",
+    "fx": "DXY at 98.859 (+0.06% 1d, +0.83% 5d) plateauing; EUR/USD at 1.1684 (-0.19% 1d, -0.49% 5d) under pressure. USD/JPY at 159.653 (+0.10% 1d) stable despite yield spike; USD/SGD at 1.278 (+0.18% 1d) showing modest strength. GBP/USD at 1.3467 (-0.25% 1d) weakening alongside European equities.",
+    "asia": "TSMC shares jump to record highs on Taiwan's easing of single-stock investment caps, driving semiconductor optimism. Australia's AUD/USD at 0.7128 (-0.42% 1d) reflects China growth concerns. China's DeepSeek V4 release adds competitive pressure to Western AI dominance.",
+    "europe": "European stocks opened lower as Israel-Lebanon ceasefire optimism fades and geopolitical risks resurface. French weather office files police complaint on suspicious Polymarket bets, adding regulatory scrutiny. Macro weakness and yield pressures weighing on sentiment."
+  },
+  "themes": [
+    {
+      "theme": "AI Competitive Intensity",
+      "implication": "China's DeepSeek V4 preview and TSMC record highs signal intensifying AI competition outside U.S. tech giants. Cathie Wood's $900K megacap buy and Needham's bullish CDNS call reflect selective AI opportunity, but broad tech ETF weakness (-1.42%) suggests valuation resets ahead.",
+      "sectors": [
+        "Technology",
+        "Semiconductors",
+        "Communications Services"
+      ]
+    },
+    {
+      "theme": "Yield-Driven Equity Repricing",
+      "implication": "10Y yield surge of +181bps over 5d to 4.323% directly pressures growth and mega-cap tech multiples. Inverted curve (73bp) historically predicts recession; equity weakness and commodity selloff consistent with defensive positioning.",
+      "sectors": [
+        "Technology",
+        "Consumer Discretionary",
+        "Real Estate"
+      ]
+    },
+    {
+      "theme": "Energy Resilience & Oil Strength",
+      "implication": "WTI +7.44% over 5d to $96.28 and natural gas +3.90% on supply concerns; Energy sector score at 67.8 (highest). Post-earnings surge potential for select oil names, but broad equity weakness limits sector upside.",
+      "sectors": [
+        "Energy",
+        "Utilities",
+        "Industrials"
+      ]
+    },
+    {
+      "theme": "Tech Earnings Volatility Setup",
+      "implication": "Amazon Q1 preview, Meta post-earnings swing expectation, and Intel historic surge possibility create binary outcomes next week. Cheap options on Meta/Tech titans suggest market pricing large swings; VIX at 19.31 still subdued given upcoming catalysts.",
+      "sectors": [
+        "Technology",
+        "Communications Services"
+      ]
+    }
+  ],
+  "sector_rotation": [
+    {
+      "sector": "Energy",
+      "stance": "overweight",
+      "reason": "Sector momentum score 67.8 (highest), +3.56% 5d ETF return on WTI +7.44% rally and nat gas +3.90% surge. Oil supply dynamics resilient despite equity weakness.",
+      "score": 68.0,
+      "real_5d_chg": 3.56
+    },
+    {
+      "sector": "Consumer Staples",
+      "stance": "overweight",
+      "reason": "Sector score 56.2 with +1.24% 5d return and +1.67% 1d outperformance. Defensive positioning and earnings stability attractive in volatile macro.",
+      "score": 59.0,
+      "real_5d_chg": 1.24
+    },
+    {
+      "sector": "Technology",
+      "stance": "neutral",
+      "reason": "Sector score 54.9 but -1.42% 1d weakness despite +0.97% 5d resilience. AI competition intensifying, yield pressure mounting, but mega-cap earnings catalysts loom. Selective positioning warranted.",
+      "score": 54.0,
+      "real_5d_chg": 0.97
+    },
+    {
+      "sector": "Industrials",
+      "stance": "overweight",
+      "reason": "Strong 1d performance (+1.77%) with +0.32% 5d return and score 51.6. Capital expenditure cycle benefits from rate expectations; earnings momentum solid.",
+      "score": 55.0,
+      "real_5d_chg": 0.32
+    },
+    {
+      "sector": "Financials",
+      "stance": "neutral",
+      "reason": "Sector score 44.0 with -1.20% 5d return and -0.79% 1d decline. Yield curve inversion (73bp at 2Y/10Y) pressures net interest margins; selective bank positioning on efficiency.",
+      "score": 46.0,
+      "real_5d_chg": -1.2
+    },
+    {
+      "sector": "Materials",
+      "stance": "neutral",
+      "reason": "Sector score 49.4 with minimal 5d change (-0.13%) and flat 1d performance. Copper -1.24% 1d weakness signals growth concerns; commodity volatility persistent.",
+      "score": 50.0,
+      "real_5d_chg": -0.13
+    },
+    {
+      "sector": "Utilities",
+      "stance": "underweight",
+      "reason": "Despite +2.72% 1d outperformance on rate spike, sector score 49.2 with -0.15% 5d return suggests mean reversion risk. Rate-sensitive regulatory headwinds.",
+      "score": 44.0,
+      "real_5d_chg": -0.15
+    },
+    {
+      "sector": "Communications Services",
+      "stance": "neutral",
+      "reason": "Sector score 42.8 with -1.44% 5d return and -0.42% 1d weakness. Meta earnings volatility and streaming pressures offset by broadband growth.",
+      "score": 48
+    },
+    {
+      "sector": "Healthcare",
+      "stance": "neutral",
+      "reason": "Sector score 41.4 with -1.72% 5d return and -0.10% 1d stability. Defensive characteristics attractive but valuation headwinds from rate spike persistent.",
+      "score": 46.0,
+      "real_5d_chg": -1.72
+    },
+    {
+      "sector": "Real Estate",
+      "stance": "underweight",
+      "reason": "Sector score 44.1 with -1.17% 5d return despite +1.15% 1d bounce. Yield surge to 4.323% directly pressures valuations; cap rate normalization ongoing.",
+      "score": 40.0,
+      "real_5d_chg": -1.17
+    },
+    {
+      "sector": "Consumer Discretionary",
+      "stance": "neutral",
+      "reason": "Sector score 38.9 with -2.22% 5d underperformance and -1.00% 1d weakness. Discretionary spending under pressure; yield headwinds and consumer sentiment concerns weigh.",
+      "score": 45
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Yield Acceleration & Duration Risk",
+      "probability": "high",
+      "impact": "10Y jumped +181bps over 5d to 4.323%; if inflation remains sticky, yields could spike further, triggering equity repricing, particularly in tech/growth (already -1.42% 1d). Inverted curve (73bp) suggests recession probability rising."
+    },
+    {
+      "risk": "Tech Earnings Disappointment",
+      "probability": "high",
+      "impact": "Amazon Q1 preview, Meta post-earnings swings, and CDNS AI pivot expectations create binary outcomes. Cheap options pricing large moves; if AI monetization falls short or competition (DeepSeek V4) proves material, broad tech selloff likely."
+    },
+    {
+      "risk": "Geopolitical Escalation",
+      "probability": "medium",
+      "impact": "Israel-Lebanon ceasefire extension positive but optimism fading per market moves. Polymarket betting scandals (U.S. soldier arrest, French police complaint) add regulatory uncertainty. Oil at $96.28 could spike if tensions escalate; energy rally vulnerable."
+    },
+    {
+      "risk": "Commodity Deflation Signal",
+      "probability": "medium",
+      "impact": "Gold -2.36% 5d, silver -6.76% 5d, copper -1.24% 1d despite rate spike suggests growth recession fears. If deflation narrative takes hold, equity valuations could compress further; defensive positioning limited by yields."
+    },
+    {
+      "risk": "Credit Spread Widening",
+      "probability": "medium",
+      "impact": "Yield volatility (10Y +181bps 5d) and equity weakness (-0.41% 1d broad S&P) historically trigger credit spread expansion. High-yield vulnerability if VIX remains elevated or moves above 22; leverage financing risks resurface."
+    }
+  ],
+  "catalysts": [
+    {
+      "event": "Amazon Q1 Earnings & AI/AWS Guidance",
+      "date": "next week",
+      "market_impact": "Critical earnings preview cited in headlines; AI monetization expectations extremely high following DeepSeek V4 announcement. Beat/miss could trigger $100B+ market cap swings in mega-cap tech complex; broad index implications significant."
+    },
+    {
+      "event": "Meta Post-Earnings Volatility & Reels Momentum",
+      "date": "next week",
+      "market_impact": "MarketWatch flagged cheap options suggesting large post-earnings swings. Meta AI competitiveness and ad-targeting effectiveness key; outcome impacts Communications Services sector (+/- 3-5%) and tech sentiment broadly."
+    },
+    {
+      "event": "Intel Earnings & Historic Surge Potential",
+      "date": "next week",
+      "market_impact": "MarketWatch headline suggests potential for historic post-earnings rally; foundry business and process node improvements key. Positive surprise could lift semiconductor/Industrials; negative surprise compounds TSMC outperformance narrative."
+    },
+    {
+      "event": "Cadence Design Systems (CDNS) AI Pivot",
+      "date": "this week/next",
+      "market_impact": "Needham commentary on 'ChatGPT Moment' for chip design tools; CDNS represents AI infrastructure play. Positive confirmation supports Industrials/Semiconductors thesis; upside target likely targets $200+ in coming weeks."
+    },
+    {
+      "event": "Treasury Yield Curve Evolution & 10Y Trajectory",
+      "date": "ongoing",
+      "market_impact": "10Y at 4.323% (+181bps 5d); if PCE/inflation data reaccelerates, yields could spike to 4.5%+, triggering 5-10% equity correction. Conversely, growth data miss could cause flight-to-quality and 10Y pullback to 4.0%, relieving tech pressure."
+    },
+    {
+      "event": "Oil Price Sustainability at $96.28",
+      "date": "this week",
+      "market_impact": "WTI +7.44% 5d on supply concerns; further upside to $100+ if Middle East tensions escalate post-ceasefire extension. Energy sector (score 67.8) could outperform further; inflation narrative resurfaces if oil stays elevated."
+    }
+  ]
+}

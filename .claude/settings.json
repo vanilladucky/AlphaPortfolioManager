@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"function api\\\\|function \\\\$\\\\|function mkChart\\\\|function switchTab\" /Users/kimhyunbin/Desktop/ClaudePortfolioManager/static/index.html)",
+      "Bash(grep -n \"^function \\\\$\\\\|^const \\\\$ \\\\|^var \\\\$ \\\\|^let \\\\$ \\\\|^\\\\s*function \\\\$\\\\b\\\\|window\\\\.\\\\$\\\\b\\\\|\\\\$ =\" /Users/kimhyunbin/Desktop/ClaudePortfolioManager/static/index.html)",
+      "Bash(grep -n \"const \\\\$\\\\b\\\\|let \\\\$\\\\b\\\\|var \\\\$\\\\b\\\\|\\\\$ =\\\\|function \\\\$\" /Users/kimhyunbin/Desktop/ClaudePortfolioManager/static/index.html)",
+      "Bash(grep -n \"getElementById\\\\|\\\\bconst \\\\$\\\\b\\\\|\\\\blet \\\\$\\\\b\\\\|\\\\$\\(\" /Users/kimhyunbin/Desktop/ClaudePortfolioManager/static/index.html)"
+    ]
+  }
+}
